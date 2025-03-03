@@ -14,7 +14,9 @@ def scan_port(ip, port):
 #Function to display help_msg
 def help_msg():
     help_text = """
-    Input to run the Port Scanner on Command Line: python3 PortScanner.py [option1, ..., option N]
+    This is TCP Port Scanner written in Python by Andrew Yuan:
+
+    To run the Port Scanner on Command Line: python3 PortScanner.py [option1, ..., option N]
 
     Available options:
         --ports <[ports to scan: port1, port2, ...]>                    (Scans Ports [1-1024] by default)
@@ -25,58 +27,61 @@ def help_msg():
     """
     print(help_text)
 
-#Function to retrieve port number and common name associated
+#Function to retrieve port number and service name associated
 def get_service_port(port):
     try:
-        return socket.getservbyport(port, 'tcp')
-    except OSError: #If no common name for port number- leave blank
+        return socket.getservbyport(port, 'tcp') #Translates to a port number for that service w/ TCP protocol
+    except OSError: #If no service name for port number- leave blank
         return ""
 
 #Function to get ports from input list
 def get_ports(args):
     if args.ports:
         try:
-            #Record the input ports from list
+            #Record the input ports from list- accepts integers separated by comma
             return [int(p.strip()) for p in args.ports.split(',')]
         except ValueError:
             print("Error: Please separate INTEGER inputs with commas")
             sys.exit(1)
     else:
-        #Default ports 1 to 1024
+        #Default to ports 1 to 1024
         return list(range(1, 1025))
 
 #Function to parse through input file
 def process_input_file(filename):
     targets = []
-    with open(filename, "r") as file: #parse through file and record content
+    with open(filename, "r") as file: #Parse through file and record content
         for line in file:
             line = line.strip()
             if not line:
                 continue
-            parts = line.split('\t') #Split line into 3 parts
+            parts = line.split('\t') #Split line into 3 parts based on tab spaces in file
             ip, port_start, port_end = parts 
 
             try:
                 port_start = int(port_start)
                 port_end = int(port_end)
-            except ValueError: #Assuming the file is valid and follows proper structure
+            except ValueError: #Assuming the file is valid and follows proper structure- skips any invalid line
                 continue
             targets.append((ip, port_start, port_end))
     return targets
 
 #Function to format output for multiple inputs
 def scan_targets_input(ip, start_port, end_port):
+    #Display Format
     out_lines = []
     out_lines.append(f"Address: {ip}")
     out_lines.append(f"Ports: {start_port}--{end_port}")
     out_lines.append(f"Displaying open ports on: {ip}")
+
+    #Performs Scan
     open_ports = []
     for port in range(start_port, end_port + 1): #Check which ports are open
         if scan_port(ip, port):
             open_ports.append(port)
     if open_ports:
         for p in open_ports:
-            service = get_service_port(p) #If we can find a common name, append it to display
+            service = get_service_port(p)#If we can find a common name, append it to display
             if service:
                 out_lines.append(f"Port {p}: OPEN {service}")
             else:
@@ -86,7 +91,7 @@ def scan_targets_input(ip, start_port, end_port):
     out_lines.append("")
     return out_lines
 
-#Function to format output for one input
+#Function to format output for one input-- basically the same as the previous scan_targets_input
 def scan_target(ip, ports, port_display):
     out_lines = []
     out_lines.append(f"Address: {ip}")
@@ -98,7 +103,7 @@ def scan_target(ip, ports, port_display):
             open_ports.append(port)
     if open_ports:
         for p in open_ports:
-            service = get_service_port(p) #If we can find a common name, append it to display
+            service = get_service_port(p)
             if service:
                 out_lines.append(f"Port {p}: OPEN {service}")
             else:
@@ -109,7 +114,7 @@ def scan_target(ip, ports, port_display):
     return out_lines
     
 def main():
-    parser = argparse.ArgumentParser(add_help = False)
+    parser = argparse.ArgumentParser(add_help = False) 
     parser.add_argument("--ports", type=str)
     parser.add_argument("--ip", type =str, default = "127.0.0.1") #Default IP address of localhost
     parser.add_argument("--input", type=str)
@@ -118,27 +123,31 @@ def main():
     
     args = parser.parse_args()
 
+    #Check if --help was called
     if args.help:
         help_msg()
         sys.exit(0) #Terminate program
     
     results = [] #Contain content to display or add to output file at the end
 
+    #Check if --input was called
     if args.input:
         targets = process_input_file(args.input)
         for ip, start_port, end_port in targets:
             results.extend(scan_targets_input(ip, start_port, end_port))
-    
+    #Runs the program with ip address requested/default on ports requested/default
     else:
         ip = args.ip
         ports_list = get_ports(args)
         if args.ports is None:
-            port_display = "1-1024"
+            ports_to_run = "1-1024"
         else:
-            port_display = args.ports
-        results.extend(scan_target(ip, ports_list, port_display))
+            ports_to_run = args.ports
+        results.extend(scan_target(ip, ports_list, ports_to_run))
 
     output_text = "\n".join(results)
+    
+    #Checks if Output file was requested
     if args.output:
         with open(args.output, "w") as outfile:
             outfile.write(output_text + "\n")
