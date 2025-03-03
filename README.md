@@ -35,6 +35,7 @@ Files:
 
 Resources Used: 
 ---
-https://docs.python.org/3/library/socket.html
-https://docs.python.org/3/library/argparse.html#argparse.Namespace
-https://www.stationx.net/common-ports-cheat-sheet/
+- https://docs.python.org/3/library/socket.html
+- https://docs.python.org/3/library/argparse.html#argparse.Namespace
+- https://www.stationx.net/common-ports-cheat-sheet/
+- https://realpython.com/python-http-server/
