@@ -29,6 +29,8 @@ This program comes with few options listed down below:
 - `--help`
     - Use this command to display a brief message listing functionality, available features, and usage syntax
 
+- Please note that selecting --input will override any --ports or --ip selections!
+
 Files:
 ---
 - PortScanner.py: Contains functions and main code to run TCP Port Scanner

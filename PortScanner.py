@@ -24,6 +24,7 @@ def help_msg():
         --input <file name>
         --output <file name>                                            (Outputs to console by default)
         --help                                                          (Display this prompt again!)
+    Please note choosing --input will override any --ports or --ip commands
     """
     print(help_text)
 
