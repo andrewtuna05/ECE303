@@ -16,7 +16,7 @@ def help_msg():
     help_text = """
     This is TCP Port Scanner written in Python by Andrew Yuan:
 
-    To run the Port Scanner on Command Line: python3 PortScanner.py [option1, ..., option N]
+    To run the Port Scanner on Command Line: python3 PortScanner.py option1, ..., option N
 
     Available options:
         --ports <port1, port2, ...>                                     (Scans Ports [1-1024] by default)
