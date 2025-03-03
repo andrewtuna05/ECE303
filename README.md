@@ -4,7 +4,7 @@ This is an implementation of a TCP Port Scanner for Professor Levin's Spring 202
 
 To run this program, enter into the command line:
 ```console
-python3 scanner.py [option1, option2, ..., optionN]
+python3 scanner.py option1, option2, ..., optionN
 ```
 
 This program comes with few options listed down below:
