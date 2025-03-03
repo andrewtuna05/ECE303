@@ -19,7 +19,7 @@ def help_msg():
     To run the Port Scanner on Command Line: python3 PortScanner.py [option1, ..., option N]
 
     Available options:
-        --ports <[ports to scan: port1, port2, ...]>                    (Scans Ports [1-1024] by default)
+        --ports <port1, port2, ...>                                     (Scans Ports [1-1024] by default)
         --ip <IP address to scan>                                       (Scans localhost by defualt)
         --input <file name>
         --output <file name>                                            (Outputs to console by default)
