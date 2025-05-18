@@ -54,13 +54,13 @@ if __name__ == "__main__":
 
     # start global receiver which won't recieve messages
     # just here so that it will get the kick to start sending
-    t0 = threading.Thread(target=node.run_receiver, args=(my_port, 0), daemon=False, name=f"recv-{my_port}-GLOBAL")
+    t0 = threading.Thread(target=node.run_receiver, args=(my_port, 0), daemon=True, name=f"recv-{my_port}-GLOBAL")
     t0.start()
 
     # start receiver threads unconditionally
     for port, p in recv_ports:
         # is not daemon thread so will always listen as long as program doesn't exit
-        t = threading.Thread(target=node.run_receiver, args=(port, p), daemon=False, name=f"recv-{my_port}-{port}")
+        t = threading.Thread(target=node.run_receiver, args=(port, p), daemon=True, name=f"recv-{my_port}-{port}")
         t.start()
         print(f"[{my_port}] Started recv-thread on port {port} (p={p})")
 

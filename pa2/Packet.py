@@ -1,5 +1,4 @@
 import struct
-import time
 
 class Packet():
     PROBE, ACK, START, DV = range(4)
@@ -8,7 +7,8 @@ class Packet():
         self.source_port = int(source_port)
         self.dest_port = int(dest_port)
         self.seq_num = int(seq_num)
-        self.packet_type = packet_type # 0 for probe, 1 for ACK, 2 for start, 3 for DV
+        self.packet_type = packet_type # 0 for probe, 1 for ACK, 2 for start
+        
         if packet_type == Packet.PROBE:
             # if data is a string encode it
             if isinstance(data, str):
@@ -26,17 +26,16 @@ class Packet():
                 raise ValueError(f"invalid data type for probe packet: {type(data)}")
 
         # data field empty for ACK packets
-        elif self.packet_type == Packet.ACK or self.packet_type == Packet.START:
+        elif packet_type in (Packet.ACK, Packet.START):
             self.data = None
 
-        elif self.packet_type == Packet.DV:  # DV
-            # data is a dict mapping dest_port to cost
+        elif packet_type == Packet.DV:
+            # data must be a dict {dest_port: cost}
             if not isinstance(data, dict):
-                raise ValueError("DV packet needs dict {destPort: cost}")
+                raise ValueError("DV packet needs a dict {dest_port: cost}")
             self.dv_entries = data
-            self.data = None
-            self.dv_time = time.time()
-
+            self.data = None    
+        
         else:
             raise ValueError(f"invalid packet type: {packet_type}")
 
@@ -52,40 +51,39 @@ class Packet():
             data_val = self.data[0] if self.data else 0
             header = struct.pack(">BHHIB", self.packet_type, self.source_port, self.dest_port, self.seq_num, data_val)
             return header
-
-        if self.packet_type == Packet.ACK or self.packet_type == Packet.START:  # ACK or START
-            return struct.pack(">BHHIB", self.packet_type, self.source_port,  self.dest_port, self.seq_num, 0)
+    
+        # ACK and start packets have no data
+        if self.packet_type in (Packet.ACK, Packet.START):
+            header = struct.pack(">BHHIB", self.packet_type, self.source_port, self.dest_port, self.seq_num, 0)
+            return header
         
-        if self.packet_type == Packet.DV:  # DV
+        if self.packet_type == Packet.DV:
             entries = self.dv_entries
             k = len(entries)
-            header = struct.pack( ">BHHH", Packet.DV, self.source_port, self.dest_port, k)
-            payload = b"".join(struct.pack(">Hf", dest, cost)
-                for dest, cost in entries.items()
-            )
-
+            header = struct.pack(">BHHIH", Packet.DV, self.source_port, self.dest_port, self.seq_num, k)
+            payload = b"".join(struct.pack(">Hf", dest, cost) for dest, cost in entries.items())
             return header + payload
-        # ACK and start packets have no data
-        header = struct.pack(">BHHIB", self.packet_type, self.source_port, self.dest_port, self.seq_num, 0)
-        return header
-
-    def bytes_to_packet(data_bytes): 
+        
+        #should never get here
+        raise ValueError(f"Cannot serialize packet type {self.packet_type}")
+    
+    @staticmethod
+    def bytes_to_packet(data_bytes):
+        
         ptype = data_bytes[0]
-        if ptype == Packet.DV:  # DV
-            _, src, dst, k = struct.unpack(
-                ">BHHH", data_bytes[:7]
-            )
+        
+        if ptype == Packet.DV:
+            #1 + 2 + 2 + 4 + 2 = 11 bytes before the entries
+            _, src, dst, seq, k = struct.unpack(">BHHIH", data_bytes[:11])
+            off = 11
             entries = {}
-            off = 7
             for _ in range(k):
-                dest, cost = struct.unpack(
-                    ">Hf", data_bytes[off:off+6]
-                )
+                dest, cost = struct.unpack(">Hf", data_bytes[off:off+6])
                 entries[dest] = cost
                 off += 6
-            pkt = Packet(src, dst, 0, Packet.DV, entries)
+            pkt = Packet(src, dst, seq, Packet.DV, entries)
             return pkt
-
+        
         if len(data_bytes) != 10:
             raise ValueError(f"Invalid packet length: {len(data_bytes)} bytes")
 
@@ -94,10 +92,10 @@ class Packet():
         # check packet types ==> if probe -> add data, if ack -> return
         if packet_type == Packet.PROBE:
             data = bytes([data_val])
-            return Packet(source_port, dest_port, seq_num, Packet.PROBE, data)
+            return Packet(source_port, dest_port, seq_num, 0, data)
         elif packet_type == Packet.ACK:
-            return Packet(source_port, dest_port, seq_num, Packet.ACK, None)
+            return Packet(source_port, dest_port, seq_num, 1, None)
         elif packet_type == Packet.START:
-            return Packet(source_port, dest_port, seq_num, Packet.START, None)
+            return Packet(source_port, dest_port, seq_num, 2, None)
         else:
             raise ValueError(f"unknown packet type: {packet_type}")
