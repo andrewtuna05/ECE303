@@ -1,0 +1,10 @@
+Address: 127.0.0.1
+Ports: 1--1024
+Displaying open ports on: 127.0.0.1
+No open ports found
+
+Address: 192.168.1.10
+Ports: 20--30
+Displaying open ports on: 192.168.1.10
+No open ports found
+
